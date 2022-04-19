@@ -1,6 +1,6 @@
 import styled, { css } from 'styled-components/native'
 
-import { RectButton } from 'react-native-gesture-handler'
+import { TouchableOpacity } from 'react-native'
 
 export type TypeProps = 'primary' | 'secondary'
 
@@ -8,7 +8,7 @@ type ButtonProps = {
   type: TypeProps
 }
 
-export const Container = styled(RectButton)<ButtonProps>`
+export const Container = styled(TouchableOpacity)<ButtonProps>`
   flex: 1;
   max-height: 56px;
   min-height: 56px;
@@ -30,5 +30,5 @@ export const Title = styled.Text`
 `
 
 export const Load = styled.ActivityIndicator.attrs(({ theme }) => ({
-  colors: theme.COLORS.TITLE
+  color: '#ffffff'
 }))``
