@@ -23,7 +23,7 @@ export function Search({ onSearch, onClear, ...rest }: Props) {
         </S.ButtonClear>
       </S.InputArea>
 
-      <S.Button>
+      <S.Button onPress={onSearch}>
         <Feather name="search" size={16} color={COLORS.TITLE} />
       </S.Button>
     </S.Container>
