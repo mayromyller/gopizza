@@ -1,14 +1,19 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
-import { Alert, ScrollView, TouchableOpacity } from 'react-native'
+import { Alert, ScrollView, TouchableOpacity, View } from 'react-native'
 import { useForm } from 'react-hook-form'
 
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as ImagePicker from 'expo-image-picker'
 import * as yup from 'yup'
 
+import { ProductNavigationProps } from '@src/@types/navigation'
+import { useNavigation, useRoute } from '@react-navigation/native'
+
 import firestore from '@react-native-firebase/firestore'
 import storage from '@react-native-firebase/storage'
+
+import { ProductProps } from '@components/ProductCard'
 
 import {
   ControlledInput,
@@ -28,6 +33,15 @@ type FormData = {
   sizeG: string
 }
 
+type PizzasResponse = ProductProps & {
+  photo_path: string
+  prices_sizes: {
+    p: string
+    m: string
+    g: string
+  }
+}
+
 const schema = yup.object({
   name: yup.string().required('Informe o nome da Pizza'),
   description: yup.string().required('Informe a descrição da Pizza'),
@@ -38,11 +52,18 @@ const schema = yup.object({
 
 export function Product() {
   const [image, setImage] = useState('')
+  const [photoPath, setPhotoPath] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+
+  const navigation = useNavigation()
+
+  const route = useRoute()
+  const { id } = route.params as ProductNavigationProps
 
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors }
   } = useForm<FormData>({
     resolver: yupResolver(schema)
@@ -92,34 +113,74 @@ export function Product() {
         photo_url,
         photo_path: reference.fullPath
       })
-      .then(() => Alert.alert('Cadastro', 'Pizza cadastrada com sucesso'))
+      .then(() => navigation.navigate('home'))
       .catch(() =>
         Alert.alert('Cadastro', 'Não foi possível cadastrar a pizza')
       )
       .finally(() => setIsLoading(false))
   }
 
+  function handleDelete() {
+    firestore()
+      .collection('pizzas')
+      .doc(id)
+      .delete()
+      .then(() => {
+        storage()
+          .ref(photoPath)
+          .delete()
+          .then(() => navigation.navigate('home'))
+      })
+  }
+
+  useEffect(() => {
+    if (id) {
+      firestore()
+        .collection('pizzas')
+        .doc(id)
+        .get()
+        .then((response) => {
+          const product = response.data() as PizzasResponse
+          reset({
+            name: product.name,
+            description: product.description,
+            sizeP: product.prices_sizes.p,
+            sizeM: product.prices_sizes.m,
+            sizeG: product.prices_sizes.g
+          })
+          setImage(product.photo_url)
+          setPhotoPath(product.photo_path)
+        })
+    }
+  }, [id])
+
   return (
     <S.Container>
       <S.Header>
-        <ButtonBack />
+        <ButtonBack onPress={() => navigation.goBack()} />
 
         <S.Title>Cadastrar</S.Title>
 
-        <TouchableOpacity>
-          <S.DeleteLabel>Deletar</S.DeleteLabel>
-        </TouchableOpacity>
+        {id ? (
+          <TouchableOpacity onPress={handleDelete}>
+            <S.DeleteLabel>Deletar</S.DeleteLabel>
+          </TouchableOpacity>
+        ) : (
+          <View style={{ width: 20 }} />
+        )}
       </S.Header>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <S.Upload>
           <Photo uri={image} />
 
-          <S.PickImageButton
-            title="Carregar"
-            type="secondary"
-            onPress={handleImagePicker}
-          />
+          {!id && (
+            <S.PickImageButton
+              title="Carregar"
+              type="secondary"
+              onPress={handleImagePicker}
+            />
+          )}
         </S.Upload>
 
         <S.Form>
@@ -173,12 +234,14 @@ export function Product() {
             />
           </S.InputGroup>
 
-          <Button
-            title="Cadastrar Pizza"
-            type="secondary"
-            isLoading={isLoading}
-            onPress={handleSubmit(handleAdd)}
-          />
+          {!id && (
+            <Button
+              title="Cadastrar Pizza"
+              type="primary"
+              isLoading={isLoading}
+              onPress={handleSubmit(handleAdd)}
+            />
+          )}
         </S.Form>
       </ScrollView>
     </S.Container>
