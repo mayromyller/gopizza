@@ -11,6 +11,8 @@ import firestore from '@react-native-firebase/firestore'
 import { ProductCard, ProductProps } from '@components/ProductCard'
 import { Search } from '@components/Search'
 
+import { useAuth } from '../../hooks/auth'
+
 import happyEmoji from '@assets/happy.png'
 
 import * as S from './styles'
@@ -20,6 +22,7 @@ export function Home() {
   const [search, setSearch] = useState('')
   const { COLORS } = useTheme()
   const navigation = useNavigation()
+  const { user, signOut } = useAuth()
 
   function fetchPizzas(value: string) {
     const formattedValue = value.toLowerCase().trim()
@@ -53,7 +56,8 @@ export function Home() {
   }
 
   function handleOpen(id: string) {
-    navigation.navigate('product', { id })
+    const route = user?.isAdmin ? 'product' : 'order'
+    navigation.navigate(route, { id })
   }
 
   function handleSearchClear() {
@@ -79,7 +83,7 @@ export function Home() {
           <S.GreetingText>Olá, Admin</S.GreetingText>
         </S.Greeting>
 
-        <TouchableOpacity>
+        <TouchableOpacity onPress={signOut}>
           <MaterialIcons name="logout" color={COLORS.TITLE} size={24} />
         </TouchableOpacity>
       </S.Header>
@@ -110,11 +114,13 @@ export function Home() {
         }}
       />
 
-      <S.NewProductButton
-        title="Cadastrar Pizza"
-        type="secondary"
-        onPress={handleAdd}
-      />
+      {user?.isAdmin && (
+        <S.NewProductButton
+          title="Cadastrar Pizza"
+          type="secondary"
+          onPress={handleAdd}
+        />
+      )}
     </S.Container>
   )
 }
