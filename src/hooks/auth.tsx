@@ -95,7 +95,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     if (storedUser) {
       const userData = JSON.parse(storedUser)
-      console.log('userData: ', userData)
       setUser(userData)
     }
 
