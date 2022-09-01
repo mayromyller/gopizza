@@ -66,7 +66,7 @@ export function Order() {
         order: order.name,
         pizza,
         table_number: tableNumber,
-        status: 'preparando',
+        status: 'Preparando',
         waiter_id: user?.id,
         image: order.photo_url
       })
