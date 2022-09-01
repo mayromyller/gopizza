@@ -80,7 +80,7 @@ export function Home() {
       <S.Header>
         <S.Greeting>
           <S.GreetingEmoji source={happyEmoji} />
-          <S.GreetingText>Olá, Admin</S.GreetingText>
+          <S.GreetingText>Olá, {user?.name}</S.GreetingText>
         </S.Greeting>
 
         <TouchableOpacity onPress={signOut}>
